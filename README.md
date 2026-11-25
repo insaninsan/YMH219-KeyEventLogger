@@ -90,5 +90,5 @@ Klavye olayları pencereye **tunnel** yönlendirme ile bağlanır (`AddHandler(K
 
 ## Öğrenci
 
-- **Ad Soyad:** _<Adınız Soyadınız>_
-- **Öğrenci No:** _<Öğrenci numaranız>_
+- **Ad Soyad:** Şerif Bayram
+- **Öğrenci No:** 225541018
