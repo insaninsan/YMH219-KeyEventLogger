@@ -1,0 +1,90 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="using:KeyEventLogger.Models"
+        x:Class="KeyEventLogger.MainWindow"
+        Title="YMH219 - Key Event Logger"
+        Width="860" Height="560"
+        MinWidth="720" MinHeight="420"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+        <!-- Butonlar odak almasın: aksi halde Space tuşu odaktaki butona tıklar -->
+        <Style Selector="Button">
+            <Setter Property="Focusable" Value="False" />
+        </Style>
+        <!-- Kayıt satırları sıkışık görünsün (tema varsayılanı çok yüksek) -->
+        <Style Selector="ListBox#RecordsList ListBoxItem">
+            <Setter Property="Padding" Value="12,3" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+        <Style Selector="TextBlock.mono">
+            <Setter Property="FontFamily" Value="Menlo, Consolas, Courier New, monospace" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+        <!-- Üst araç çubuğu -->
+        <Border DockPanel.Dock="Top" Background="#F3F3F3" Padding="10"
+                BorderBrush="#DDDDDD" BorderThickness="0,0,0,1">
+            <DockPanel>
+                <!-- Kayıt durumu göstergesi -->
+                <Border x:Name="IndicatorBorder" DockPanel.Dock="Right"
+                        CornerRadius="14" Padding="14,5" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse x:Name="IndicatorDot" Width="12" Height="12" VerticalAlignment="Center" />
+                        <TextBlock x:Name="IndicatorText" FontWeight="Bold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="StartButton" Content="▶ Başlat" Click="StartButton_Click" />
+                    <Button x:Name="StopButton" Content="■ Durdur" Click="StopButton_Click" />
+                    <Button x:Name="ClearButton" Content="Temizle" Click="ClearButton_Click" />
+                    <Button x:Name="SaveButton" Content="Kaydet (.txt)" Click="SaveButton_Click" />
+                    <CheckBox x:Name="IncludeKeyUpCheckBox"
+                              Content="KeyUp olaylarını da kaydet"
+                              Focusable="False"
+                              Margin="8,0,0,0"
+                              IsCheckedChanged="IncludeKeyUpCheckBox_IsCheckedChanged" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Alt durum çubuğu -->
+        <Border DockPanel.Dock="Bottom" Background="#EEEEEE" Padding="10,5">
+            <TextBlock x:Name="StatusText" FontSize="12" />
+        </Border>
+
+        <!-- Sağ panel: istatistik ve kapsam notu -->
+        <Border DockPanel.Dock="Right" Width="220" Padding="14"
+                BorderBrush="#DDDDDD" BorderThickness="1,0,0,0">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Bottom" TextWrapping="Wrap" FontSize="11" Foreground="#666666"
+                           Text="Bu uygulama yalnızca kendi penceresi odaktayken bu pencereye gelen tuş olaylarını gösterir. Diğer uygulamalardaki tuşlar kaydedilmez, kayıtlar hiçbir yere gönderilmez." />
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="İstatistik" FontWeight="Bold" FontSize="16" />
+                    <TextBlock x:Name="TotalText" />
+                    <TextBlock x:Name="RecordCountText" />
+                    <TextBlock Text="En sık basılan tuşlar" FontWeight="Bold" Margin="0,10,0,0" />
+                    <TextBlock x:Name="TopKeysText" Classes="mono" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Kayıt listesi -->
+        <Grid RowDefinitions="Auto,*" Margin="10">
+            <TextBlock Grid.Row="0" Classes="mono" FontWeight="Bold" Margin="12,0,0,6"
+                       Text="Zaman          Olay        Tuş            Kar.    Değiştirici" />
+            <ListBox Grid.Row="1" x:Name="RecordsList"
+                     BorderBrush="#DDDDDD" BorderThickness="1">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:KeyEventRecord">
+                        <TextBlock Classes="mono" Text="{Binding DisplayText}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </DockPanel>
+</Window>
