@@ -18,7 +18,7 @@ Nesne Tabanlı Programlama (YMH 219) dersi ek uygulama ödevi. Klavye olayların
 **Gereksinimler:** [.NET 8 SDK](https://dotnet.microsoft.com/download) (Windows, macOS veya Linux). NuGet paketleri ilk derlemede otomatik indirilir.
 
 ```bash
-git clone https://github.com/<kullanici-adi>/YMH219-KeyEventLogger.git
+git clone https://github.com/insaninsan/YMH219-KeyEventLogger.git
 cd YMH219-KeyEventLogger
 dotnet run --project KeyEventLogger
 ```
