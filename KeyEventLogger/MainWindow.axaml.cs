@@ -23,6 +23,12 @@ public partial class MainWindow : Window
 
     private readonly KeyLogger logger = new();
 
+    // Etkin zaman filtresi; ikisi de null ise filtre yok
+    private DateTime? filterFrom;
+    private DateTime? filterTo;
+
+    private bool IsFiltering => filterFrom is not null || filterTo is not null;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -44,6 +50,7 @@ public partial class MainWindow : Window
 
         UpdateRecordingUi();
         UpdateStatistics();
+        RefreshList();
         SetStatus("Kayda başlamak için ▶ Başlat'a basın.");
     }
 
@@ -55,6 +62,10 @@ public partial class MainWindow : Window
 
     private void Capture(KeyEventArgs e, KeyEventKind kind)
     {
+        // Filtre kutularına yazılan saatler tuş kaydı olarak listeye girmesin
+        if (e.Source is TextBox)
+            return;
+
         var record = new KeyEventRecord(DateTime.Now, kind, e.Key, e.KeySymbol, e.KeyModifiers);
 
         if (logger.Record(record))
@@ -94,7 +105,9 @@ public partial class MainWindow : Window
 
     private async void SaveButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (logger.Records.Count == 0)
+        // Filtre etkinse yalnızca ekranda görünen (filtrelenmiş) kayıtlar kaydedilir
+        List<KeyEventRecord> toSave = GetDisplayedRecords().ToList();
+        if (toSave.Count == 0)
         {
             SetStatus("Kaydedilecek kayıt yok.", isError: true);
             return;
@@ -121,10 +134,10 @@ public partial class MainWindow : Window
 
             await using (Stream stream = await file.OpenWriteAsync())
             {
-                await LogFileWriter.WriteAsync(stream, logger.Records.ToList());
+                await LogFileWriter.WriteAsync(stream, toSave);
             }
 
-            SetStatus($"{logger.Records.Count} kayıt dosyaya yazıldı: {file.Name}");
+            SetStatus($"{toSave.Count} kayıt dosyaya yazıldı{(IsFiltering ? " (filtrelenmiş)" : "")}: {file.Name}");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -132,11 +145,92 @@ public partial class MainWindow : Window
         }
     }
 
+    // ===================== Zaman filtresi =====================
+
+    private void ApplyFilterButton_Click(object? sender, RoutedEventArgs e)
+    {
+        DateTime today = DateTime.Today;
+
+        if (!TimeRangeParser.TryParse(FilterFromBox.Text, today, out DateTime? from) ||
+            !TimeRangeParser.TryParse(FilterToBox.Text, today, out DateTime? to))
+        {
+            SetStatus("Zaman biçimi anlaşılamadı. Örnek: 14:05, 14:05:30 veya 25.11.2026 14:05", isError: true);
+            return;
+        }
+
+        to = TimeRangeParser.ExtendToEndOfUnit(to, FilterToBox.Text);
+
+        if (from is null && to is null)
+        {
+            SetStatus("Filtrelemek için başlangıç ve/veya bitiş zamanı girin.", isError: true);
+            return;
+        }
+        if (from > to)
+        {
+            SetStatus("Başlangıç zamanı bitiş zamanından sonra olamaz.", isError: true);
+            return;
+        }
+
+        filterFrom = from;
+        filterTo = to;
+        RefreshList();
+        ReleaseFilterFocus();
+        SetStatus($"Filtre uygulandı: {DescribeFilter()}");
+    }
+
+    private void ClearFilterButton_Click(object? sender, RoutedEventArgs e)
+    {
+        filterFrom = null;
+        filterTo = null;
+        FilterFromBox.Text = string.Empty;
+        FilterToBox.Text = string.Empty;
+        RefreshList();
+        ReleaseFilterFocus();
+        SetStatus("Filtre kaldırıldı; tüm kayıtlar gösteriliyor.");
+    }
+
+    private void FilterBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            ApplyFilterButton_Click(sender, e);
+        }
+    }
+
+    /// <summary>
+    /// Butonlar odak almadığı için filtrelemeden sonra imleç kutuda kalır ve sonraki tuşlar
+    /// kutuya yazılır (kaydedilmez). Odağı kutudan alarak tuşların tekrar kaydedilmesini sağlıyoruz.
+    /// </summary>
+    private void ReleaseFilterFocus() => FocusManager?.ClearFocus();
+
+    /// <summary>Listeyi filtreye göre yeniden doldurur.</summary>
+    private void RefreshList()
+    {
+        RecordsList.ItemsSource = IsFiltering ? logger.GetRecordsBetween(filterFrom, filterTo) : logger.Records;
+
+        int shown = GetDisplayedRecords().Count();
+        FilterInfoText.Text = IsFiltering ? $"Filtre: {shown} / {logger.Records.Count} kayıt" : string.Empty;
+        ClearFilterButton.IsEnabled = IsFiltering;
+    }
+
+    private IEnumerable<KeyEventRecord> GetDisplayedRecords() =>
+        RecordsList.ItemsSource as IEnumerable<KeyEventRecord> ?? Enumerable.Empty<KeyEventRecord>();
+
+    private string DescribeFilter() =>
+        $"{(filterFrom is { } f ? f.ToString("dd.MM.yyyy HH:mm:ss") : "başlangıç yok")} – " +
+        $"{(filterTo is { } t ? t.ToString("dd.MM.yyyy HH:mm:ss") : "bitiş yok")}";
+
     // ===================== Arayüz güncelleme =====================
 
     private void Logger_RecordingStateChanged(object? sender, EventArgs e) => UpdateRecordingUi();
 
-    private void Logger_StatisticsChanged(object? sender, EventArgs e) => UpdateStatistics();
+    private void Logger_StatisticsChanged(object? sender, EventArgs e)
+    {
+        UpdateStatistics();
+        if (IsFiltering)
+            RefreshList();  // Yeni kayıt filtre aralığına giriyorsa listede görünsün
+    }
 
     private void UpdateRecordingUi()
     {

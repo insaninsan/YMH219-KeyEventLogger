@@ -77,6 +77,14 @@ public class KeyLogger
         StatisticsChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Zamanı verilen aralıkta olan kayıtları döndürür. Sınırlardan biri null ise o tarafta sınır yoktur.
+    /// </summary>
+    public IReadOnlyList<KeyEventRecord> GetRecordsBetween(DateTime? from, DateTime? to) =>
+        Records
+            .Where(r => (from is null || r.Timestamp >= from) && (to is null || r.Timestamp <= to))
+            .ToList();
+
     /// <summary>En sık basılan tuşları, basılma sayısına göre azalan sırada döndürür.</summary>
     public IReadOnlyList<KeyValuePair<string, int>> GetTopKeys(int count) =>
         keyCounts

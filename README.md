@@ -31,7 +31,8 @@ Visual Studio 2022 / JetBrains Rider ile: `KeyEventLogger.sln` dosyasını açı
 2. Pencere odaktayken tuşlara basın. Her olay zaman, olay türü, tuş adı, üretilen karakter ve değiştirici tuşlarla (Shift, Control, Alt, Meta) listelenir.
 3. İsterseniz **KeyUp olaylarını da kaydet** seçeneğiyle tuş bırakma olaylarını da listeye ekleyin.
 4. **■ Durdur** ile kaydı kapatın, **Temizle** ile listeyi ve istatistikleri sıfırlayın.
-5. **Kaydet (.txt)** ile kayıtları seçtiğiniz bir metin dosyasına yazın.
+5. **Zaman aralığı** kutularına başlangıç ve/veya bitiş yazıp **Filtrele**'ye basarak yalnızca o aralıktaki kayıtları görün. Saat (`14:05`, `14:05:30`) veya tarih ve saat (`25.11.2026 14:05`) yazılabilir; yalnızca saat yazılırsa bugünün tarihi kullanılır. **Filtreyi Kaldır** ile tüm kayıtlara dönün.
+6. **Kaydet (.txt)** ile kayıtları seçtiğiniz bir metin dosyasına yazın. Filtre etkinse yalnızca filtrelenmiş kayıtlar kaydedilir.
 
 ## Özellikler
 
@@ -40,6 +41,7 @@ Visual Studio 2022 / JetBrains Rider ile: `KeyEventLogger.sln` dosyasını açı
 - Başlat / Durdur / Temizle / Kaydet işlevleri; kayıt açıkken Başlat, kapalıyken Durdur butonu pasif
 - Açık kayıt durumu göstergesi (renkli rozet + pencere başlığı)
 - İstatistik: toplam tuşa basma sayısı ve en sık basılan 5 tuş
+- Kayıtları tarih/saat aralığına göre filtreleme (yeni kayıtlar aralığa giriyorsa listeye canlı eklenir)
 - Pencere arka plana geçince durum çubuğunda "diğer uygulamalardaki tuşlar kaydedilmez" uyarısı
 - Hata yönetimi: boş listeyi kaydetmeye çalışma, iptal edilen kaydetme ve dosya yazma hataları durum çubuğunda kullanıcıya bildirilir; uygulama kapanmaz
 
@@ -67,6 +69,7 @@ KeyEventLogger/
 └── Models/
     ├── KeyEventRecord.cs   Tek bir klavye olayının değişmez kaydı (zaman, tür, tuş, karakter, değiştirici)
     ├── KeyLogger.cs        Kayıt durumu, kayıt listesi ve istatistikler; RecordingStateChanged / StatisticsChanged olayları
+    ├── TimeRangeParser.cs  Filtre kutularındaki tarih/saat metnini çözer
     └── LogFileWriter.cs    Kayıtları StreamWriter ile .txt dosyasına yazar
 ```
 
@@ -80,13 +83,16 @@ Klavye olayları pencereye **tunnel** yönlendirme ile bağlanır (`AddHandler(K
 |---|---|
 | ![Kayıt açık](docs/screenshots/recording.png) | ![Kayıt durduruldu](docs/screenshots/stopped.png) |
 
+**Zaman aralığı filtresi** (yalnızca 17:15:51'den sonraki kayıtlar):
+
+![Zaman filtresi](docs/screenshots/filter.png)
+
 ## Bilinen Sınırlamalar / Geliştirme Notları
 
 - İşletim sistemine ait kısayollar (ör. macOS'ta `Cmd+Tab`, Windows'ta `Alt+Tab`) uygulamaya hiç ulaşmadığı için listelenmez.
 - Bazı tuşların adı platforma göre farklı görünebilir (ör. `Enter` tuşu `Return`, `Backspace` tuşu `Back` olarak listelenir).
 - Tuş basılı tutulduğunda işletim sisteminin gönderdiği tekrar olayları da ayrı ayrı kaydedilir.
 - Kayıtlar yalnızca bellekte tutulur; kaydedilmeden uygulama kapatılırsa kaybolur.
-- Kayıtları tarih/saat aralığına göre filtreleme özelliği eklenmemiştir.
 
 ## Öğrenci
 

@@ -74,10 +74,23 @@
         </Border>
 
         <!-- Kayıt listesi -->
-        <Grid RowDefinitions="Auto,*" Margin="10">
-            <TextBlock Grid.Row="0" Classes="mono" FontWeight="Bold" Margin="12,0,0,6"
-                       Text="Zaman          Olay        Tuş            Kar.    Değiştirici" />
-            <ListBox Grid.Row="1" x:Name="RecordsList"
+        <Grid RowDefinitions="Auto,Auto,*" Margin="10">
+            <!-- Tarih/saat aralığı filtresi -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,10">
+                <TextBlock Text="Zaman aralığı:" VerticalAlignment="Center" />
+                <TextBox x:Name="FilterFromBox" Width="150" Watermark="başlangıç (ör. 14:05)" KeyDown="FilterBox_KeyDown" />
+                <TextBlock Text="–" VerticalAlignment="Center" />
+                <TextBox x:Name="FilterToBox" Width="150" Watermark="bitiş (ör. 14:30)" KeyDown="FilterBox_KeyDown" />
+                <Button x:Name="ApplyFilterButton" Content="Filtrele" Click="ApplyFilterButton_Click" />
+                <Button x:Name="ClearFilterButton" Content="Filtreyi Kaldır" Click="ClearFilterButton_Click" />
+            </StackPanel>
+
+            <DockPanel Grid.Row="1" Margin="12,0,4,6">
+                <TextBlock x:Name="FilterInfoText" DockPanel.Dock="Right" Foreground="#2563EB" FontWeight="Bold" />
+                <TextBlock Classes="mono" FontWeight="Bold"
+                           Text="Zaman          Olay        Tuş            Kar.    Değiştirici" />
+            </DockPanel>
+            <ListBox Grid.Row="2" x:Name="RecordsList"
                      BorderBrush="#DDDDDD" BorderThickness="1">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="models:KeyEventRecord">
